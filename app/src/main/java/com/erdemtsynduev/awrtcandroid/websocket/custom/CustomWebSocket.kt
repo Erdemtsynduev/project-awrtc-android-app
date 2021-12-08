@@ -29,13 +29,13 @@ class CustomWebSocket(
     }
 
     override fun onError(exception: Exception) {
-        webSocketEvent.onError(exception)
         connectFlag = false
+        webSocketEvent.onError(exception)
     }
 
     override fun onOpen(serverHandshake: ServerHandshake) {
-        webSocketEvent.onOpen()
         connectFlag = true
+        webSocketEvent.onOpen()
     }
 
     override fun onMessage(bytes: ByteBuffer) {
@@ -64,7 +64,13 @@ class CustomWebSocket(
         this.internalSend(byteArray)
     }
 
+    fun sendByteArray(data: ByteArray?) {
+        internalSend(data)
+    }
+
     private fun internalSend(data: ByteArray?) {
-        send(data)
+        if (connectFlag) {
+            send(data)
+        }
     }
 }

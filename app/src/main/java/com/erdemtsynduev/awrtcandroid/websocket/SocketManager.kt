@@ -1,7 +1,10 @@
 package com.erdemtsynduev.awrtcandroid.websocket
 
 import android.util.Log
+import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
 import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventType
+import com.erdemtsynduev.awrtcandroid.model.netevent.NetworkEvent
+import com.erdemtsynduev.awrtcandroid.utils.toByteArray
 import com.erdemtsynduev.awrtcandroid.utils.toNetworkEvent
 import com.erdemtsynduev.awrtcandroid.websocket.custom.CustomWebSocket
 import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketEvent
@@ -73,6 +76,7 @@ class SocketManager() : WebSocketEvent {
         Log.i(TAG, "socket is open!")
         sendVersion()
         sendHeartbeat()
+        startServer("")
     }
 
     override fun onClose() {
@@ -114,6 +118,26 @@ class SocketManager() : WebSocketEvent {
         } else {
             val event = byteArray.toNetworkEvent()
             //TODO ADD callback
+        }
+    }
+
+    fun startServer(address: String) {
+        sendNetworkEvent(
+            NetworkEvent(
+                netEventType = NetEventType.SERVER_INITIALIZED,
+                connectionId = ConnectionId(),
+                dataString = "OYTIGZF"
+            )
+        )
+    }
+
+    fun sendNetworkEvent(evt: NetworkEvent) {
+        sendByteArray(evt.toByteArray())
+    }
+
+    private fun sendByteArray(data: ByteArray?) {
+        if (webSocket != null) {
+            webSocket?.sendByteArray(data)
         }
     }
 
