@@ -31,23 +31,7 @@ class SocketClientManager() : WebSocketClientEvent {
             customWebSocketClient = CustomWebSocketClient(uri, this)
 
             if (url.startsWith("wss")) {
-                try {
-                    val sslContext = SSLContext.getInstance("TLS")
-                    sslContext?.init(
-                        null,
-                        arrayOf<TrustManager>(CustomX509TrustManager()),
-                        SecureRandom()
-                    )
-                    var factory: SSLSocketFactory? = null
-                    if (sslContext != null) {
-                        factory = sslContext.socketFactory
-                    }
-                    if (factory != null) {
-                        customWebSocketClient?.setSocketFactory(factory)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                customWebSocketClient?.enableUnsafeSslConnection()
             }
             customWebSocketClient?.connect()
         }
