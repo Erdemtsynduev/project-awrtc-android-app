@@ -8,7 +8,6 @@ import java.net.URI
 import java.nio.ByteBuffer
 import java.security.SecureRandom
 import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 
 /**
@@ -27,8 +26,8 @@ class CustomWebSocketClient(
         if (connectFlag) {
             try {
                 Thread.sleep(3000)
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
+            } catch (exception: InterruptedException) {
+                exception.printStackTrace()
             }
             webSocketClientEvent.onReconnect()
         } else {
@@ -47,7 +46,6 @@ class CustomWebSocketClient(
     }
 
     override fun onMessage(bytes: ByteBuffer) {
-        super.onMessage(bytes)
         webSocketClientEvent.onMessage(bytes)
     }
 
@@ -60,7 +58,7 @@ class CustomWebSocketClient(
     }
 
     override fun sendByteArray(data: ByteArray?) {
-        if (data != null) {
+        data?.let {
             internalSend(data)
         }
     }

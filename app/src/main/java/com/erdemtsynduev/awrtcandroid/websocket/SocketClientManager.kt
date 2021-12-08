@@ -9,14 +9,9 @@ import com.erdemtsynduev.awrtcandroid.utils.toByteArray
 import com.erdemtsynduev.awrtcandroid.utils.toNetworkEvent
 import com.erdemtsynduev.awrtcandroid.websocket.custom.CustomWebSocketClient
 import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketClientEvent
-import com.erdemtsynduev.awrtcandroid.websocket.ssl.CustomX509TrustManager
 import java.lang.Exception
 import java.net.URI
 import java.nio.ByteBuffer
-import java.security.SecureRandom
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManager
 
 class SocketClientManager() : WebSocketClientEvent {
 
