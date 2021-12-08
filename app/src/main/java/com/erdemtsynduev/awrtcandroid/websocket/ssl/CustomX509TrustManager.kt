@@ -5,7 +5,8 @@ import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import javax.net.ssl.X509TrustManager
 
-internal class CustomTrustManager : X509TrustManager {
+@SuppressLint("CustomX509TrustManager")
+class CustomX509TrustManager : X509TrustManager {
 
     @SuppressLint("TrustAllX509TrustManager")
     @Throws(CertificateException::class)

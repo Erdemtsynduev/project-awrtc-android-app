@@ -3,12 +3,12 @@ package com.erdemtsynduev.awrtcandroid.utils
 import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
 import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventDataType
 import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventType
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetworkEvent
+import com.erdemtsynduev.awrtcandroid.model.netevent.NetEvent
 
 /**
  * Конвертируем массив байтов в NetworkEvent
  */
-fun ByteArray.toNetworkEvent(): NetworkEvent {
+fun ByteArray.toNetworkEvent(): NetEvent {
     // Получаем первый байт из массива байтов
     val byteType = this[0]
     // Конвертируем первый байт в тип NetEventType
@@ -19,7 +19,7 @@ fun ByteArray.toNetworkEvent(): NetworkEvent {
     val dataType: NetEventDataType = NetEventDataType.from(byteDataType)
 
     // Получаем значение по id, считывая третий и четвертый байт
-    val id: Short = read2BytesFromBuffer(this, 2).toShort()
+    val id: Short = ByteUtils.read2BytesFromBuffer(this, 2).toShort()
 
     var dataString: String? = null
     var dataByteArray: ByteArray? = null
@@ -33,21 +33,18 @@ fun ByteArray.toNetworkEvent(): NetworkEvent {
             dataString = String(newByteArray.toByteArray(), Charsets.UTF_16)
         }
         NetEventDataType.NULL -> {
-            //message has no data
-        }
-        else -> {
-            // Error
+            // Данных нет
         }
     }
 
     val conId = ConnectionId(id)
-    return NetworkEvent(type, conId, dataString, dataByteArray)
+    return NetEvent(type, conId, dataString, dataByteArray)
 }
 
 /**
  * Конвертируем NetworkEvent в массив байт
  */
-fun NetworkEvent.toByteArray(): ByteArray {
+fun NetEvent.toByteArray(): ByteArray {
     val dataType: NetEventDataType
     var length = 4
 
@@ -82,13 +79,13 @@ fun NetworkEvent.toByteArray(): ByteArray {
     }
 
     this.connectionId.id.let {
-        write2BytesToBuffer(result, 2, it)
+        ByteUtils.write2BytesToBuffer(result, 2, it)
     }
 
     // Определяем тип данных NetEventDataType
     if (dataType == NetEventDataType.BYTE_ARRAY) {
         this.dataByteArray?.size?.let {
-            write4BytesToBuffer(result, 4, it)
+            ByteUtils.write4BytesToBuffer(result, 4, it)
         }
         // Получаем данные из массива элементов
         this.dataByteArray?.forEachIndexed { index, byte ->
@@ -96,35 +93,11 @@ fun NetworkEvent.toByteArray(): ByteArray {
         }
     } else if (dataType == NetEventDataType.UTF16_STRING) {
         this.dataString?.length?.let {
-            write4BytesToBuffer(result, 4, it)
+            ByteUtils.write4BytesToBuffer(result, 4, it)
         }
         this.dataString?.toByteArray(Charsets.UTF_16LE)?.forEachIndexed { index, byte ->
             result[8 + index] = byte
         }
     }
     return result
-}
-
-private fun write2BytesToBuffer(buffer: ByteArray, offset: Int, value: Short) {
-    buffer[offset + 0] = (value.toInt() and 0xff).toByte()
-    buffer[offset + 1] = (value.toInt() and 0xff shl 8).toByte()
-}
-
-private fun read2BytesFromBuffer(buffer: ByteArray, offset: Int): Int {
-    return (buffer[offset + 1].toInt() and 0xff shl 8) or
-            (buffer[offset + 0].toInt() and 0xff)
-}
-
-private fun write4BytesToBuffer(buffer: ByteArray, offset: Int, data: Int) {
-    buffer[offset + 0] = (data shr 0).toByte()
-    buffer[offset + 1] = (data shr 8).toByte()
-    buffer[offset + 2] = (data shr 16).toByte()
-    buffer[offset + 3] = (data shr 24).toByte()
-}
-
-private fun read4BytesFromBuffer(buffer: ByteArray, offset: Int): Int {
-    return (buffer[offset + 3].toInt() shl 24) or
-            (buffer[offset + 2].toInt() and 0xff shl 16) or
-            (buffer[offset + 1].toInt() and 0xff shl 8) or
-            (buffer[offset + 0].toInt() and 0xff)
 }

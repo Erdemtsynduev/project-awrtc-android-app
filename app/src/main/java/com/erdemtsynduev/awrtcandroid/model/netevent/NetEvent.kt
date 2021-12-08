@@ -1,6 +1,6 @@
 package com.erdemtsynduev.awrtcandroid.model.netevent
 
-class NetworkEvent(
+class NetEvent(
     var netEventType: NetEventType? = null,
     var connectionId: ConnectionId = ConnectionId(),
     var dataString: String? = null,

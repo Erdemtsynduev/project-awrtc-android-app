@@ -3,12 +3,13 @@ package com.erdemtsynduev.awrtcandroid.websocket
 import android.util.Log
 import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
 import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventType
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetworkEvent
+import com.erdemtsynduev.awrtcandroid.model.netevent.NetEvent
+import com.erdemtsynduev.awrtcandroid.utils.ConstData
 import com.erdemtsynduev.awrtcandroid.utils.toByteArray
 import com.erdemtsynduev.awrtcandroid.utils.toNetworkEvent
-import com.erdemtsynduev.awrtcandroid.websocket.custom.CustomWebSocket
-import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketEvent
-import com.erdemtsynduev.awrtcandroid.websocket.ssl.CustomTrustManager
+import com.erdemtsynduev.awrtcandroid.websocket.custom.CustomWebSocketClient
+import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketClientEvent
+import com.erdemtsynduev.awrtcandroid.websocket.ssl.CustomX509TrustManager
 import java.lang.Exception
 import java.net.URI
 import java.nio.ByteBuffer
@@ -17,24 +18,24 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 
-class SocketManager() : WebSocketEvent {
+class SocketClientManager() : WebSocketClientEvent {
 
-    private var webSocket: CustomWebSocket? = null
+    private var customWebSocketClient: CustomWebSocketClient? = null
 
     private var remoteProtocolVersion = 1
     private var heartBeatReceived = true
 
     fun connect(url: String) {
-        if (webSocket == null || !webSocket?.isOpen!!) {
+        if (customWebSocketClient == null || !customWebSocketClient?.isOpen!!) {
             val uri = URI(url)
-            webSocket = CustomWebSocket(uri, this)
+            customWebSocketClient = CustomWebSocketClient(uri, this)
 
             if (url.startsWith("wss")) {
                 try {
                     val sslContext = SSLContext.getInstance("TLS")
                     sslContext?.init(
                         null,
-                        arrayOf<TrustManager>(CustomTrustManager()),
+                        arrayOf<TrustManager>(CustomX509TrustManager()),
                         SecureRandom()
                     )
                     var factory: SSLSocketFactory? = null
@@ -42,33 +43,21 @@ class SocketManager() : WebSocketEvent {
                         factory = sslContext.socketFactory
                     }
                     if (factory != null) {
-                        webSocket?.setSocketFactory(factory)
+                        customWebSocketClient?.setSocketFactory(factory)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
-            webSocket?.connect()
+            customWebSocketClient?.connect()
         }
     }
 
     fun unConnect() {
-        if (webSocket != null) {
-            webSocket?.setConnectFlag(false)
-            webSocket?.close()
-            webSocket = null
-        }
-    }
-
-    private fun sendVersion() {
-        if (webSocket != null) {
-            webSocket?.sendVersion()
-        }
-    }
-
-    private fun sendHeartbeat() {
-        if (webSocket != null) {
-            webSocket?.sendHeartbeat()
+        if (customWebSocketClient != null) {
+            customWebSocketClient?.setConnectFlag(false)
+            customWebSocketClient?.close()
+            customWebSocketClient = null
         }
     }
 
@@ -123,7 +112,7 @@ class SocketManager() : WebSocketEvent {
 
     fun startServer(address: String) {
         sendNetworkEvent(
-            NetworkEvent(
+            NetEvent(
                 netEventType = NetEventType.SERVER_INITIALIZED,
                 connectionId = ConnectionId(),
                 dataString = "OYTIGZF"
@@ -133,20 +122,37 @@ class SocketManager() : WebSocketEvent {
 
     fun stopServer() {
         sendNetworkEvent(
-            NetworkEvent(
+            NetEvent(
                 netEventType = NetEventType.SERVER_CLOSED,
                 connectionId = ConnectionId()
             )
         )
     }
 
-    fun sendNetworkEvent(evt: NetworkEvent) {
+    fun sendNetworkEvent(evt: NetEvent) {
         sendByteArray(evt.toByteArray())
     }
 
     private fun sendByteArray(data: ByteArray?) {
-        if (webSocket != null) {
-            webSocket?.sendByteArray(data)
+        if (customWebSocketClient != null) {
+            customWebSocketClient?.sendByteArray(data)
+        }
+    }
+
+    private fun sendVersion() {
+        if (customWebSocketClient != null) {
+            val byteArray = ByteArray(2)
+            byteArray[0] = NetEventType.META_VERSION.value
+            byteArray[1] = ConstData.PROTOCOL_VERSION.toByte()
+            customWebSocketClient?.sendByteArray(byteArray)
+        }
+    }
+
+    fun sendHeartbeat() {
+        if (customWebSocketClient != null) {
+            val byteArray = ByteArray(1)
+            byteArray[0] = NetEventType.META_HEART_BEAT.value
+            customWebSocketClient?.sendByteArray(byteArray)
         }
     }
 

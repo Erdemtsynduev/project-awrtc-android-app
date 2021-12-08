@@ -2,7 +2,7 @@ package com.erdemtsynduev.awrtcandroid
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.erdemtsynduev.awrtcandroid.websocket.SocketManager
+import com.erdemtsynduev.awrtcandroid.websocket.SocketClientManager
 
 class MainActivity : AppCompatActivity() {
 
@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun test() {
-        val socketManager = SocketManager()
+        val socketManager = SocketClientManager()
         socketManager.connect("ws://10.0.2.2:12776")
     }
 }

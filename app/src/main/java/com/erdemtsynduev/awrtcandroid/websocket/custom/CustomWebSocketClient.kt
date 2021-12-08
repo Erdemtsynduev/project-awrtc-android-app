@@ -1,17 +1,20 @@
 package com.erdemtsynduev.awrtcandroid.websocket.custom
 
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventType
-import com.erdemtsynduev.awrtcandroid.utils.ConstData
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
 import java.net.URI
 import java.nio.ByteBuffer
 
-class CustomWebSocket(
+/**
+ * Кастомный веб сокет с возможностью реконнекта
+ * @param serverUri адрес для подключения к сокету
+ * @param webSocketClientEvent ивенты событий вебсокета
+ */
+class CustomWebSocketClient(
     serverUri: URI?,
-    private val webSocketEvent: WebSocketEvent
-) : WebSocketClient(serverUri) {
+    private val webSocketClientEvent: WebSocketClientEvent
+) : WebSocketClient(serverUri), BaseWebSocketClient {
 
     private var connectFlag = false
 
@@ -22,50 +25,39 @@ class CustomWebSocket(
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
-            webSocketEvent.onReconnect()
+            webSocketClientEvent.onReconnect()
         } else {
-            webSocketEvent.onClose()
+            webSocketClientEvent.onClose()
         }
     }
 
     override fun onError(exception: Exception) {
         connectFlag = false
-        webSocketEvent.onError(exception)
+        webSocketClientEvent.onError(exception)
     }
 
     override fun onOpen(serverHandshake: ServerHandshake) {
         connectFlag = true
-        webSocketEvent.onOpen()
+        webSocketClientEvent.onOpen()
     }
 
     override fun onMessage(bytes: ByteBuffer) {
         super.onMessage(bytes)
-        webSocketEvent.onMessage(bytes)
+        webSocketClientEvent.onMessage(bytes)
     }
 
     override fun onMessage(message: String) {
-        webSocketEvent.onMessage(message)
+        webSocketClientEvent.onMessage(message)
     }
 
-    fun setConnectFlag(flag: Boolean) {
-        connectFlag = flag
+    override fun setConnectFlag(connectFlag: Boolean) {
+        this.connectFlag = connectFlag
     }
 
-    fun sendVersion() {
-        val byteArray = ByteArray(2)
-        byteArray[0] = NetEventType.META_VERSION.value
-        byteArray[1] = ConstData.PROTOCOL_VERSION.toByte()
-        this.internalSend(byteArray)
-    }
-
-    fun sendHeartbeat() {
-        val byteArray = ByteArray(1)
-        byteArray[0] = NetEventType.META_HEART_BEAT.value
-        this.internalSend(byteArray)
-    }
-
-    fun sendByteArray(data: ByteArray?) {
-        internalSend(data)
+    override fun sendByteArray(data: ByteArray?) {
+        if (data != null) {
+            internalSend(data)
+        }
     }
 
     private fun internalSend(data: ByteArray?) {
