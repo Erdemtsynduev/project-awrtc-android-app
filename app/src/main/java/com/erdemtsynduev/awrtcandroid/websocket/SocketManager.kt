@@ -83,9 +83,9 @@ class SocketManager() : WebSocketEvent {
         Log.i(TAG, "onReconnect")
     }
 
-    override fun onMessage(byteBuffer: ByteBuffer) {
+    override fun onMessage(bytes: ByteBuffer) {
         Log.i(TAG, "onMessage bytes")
-        parseMessage(byteBuffer.array())
+        parseMessage(bytes.array())
     }
 
     override fun onMessage(message: String) {
