@@ -117,7 +117,7 @@ class SocketManager() : WebSocketEvent {
             Log.i(TAG, "heartBeatReceived = $heartBeatReceived")
         } else {
             val event = byteArray.toNetworkEvent()
-            //TODO ADD callback
+            Log.i(TAG, "event = $event")
         }
     }
 
@@ -127,6 +127,15 @@ class SocketManager() : WebSocketEvent {
                 netEventType = NetEventType.SERVER_INITIALIZED,
                 connectionId = ConnectionId(),
                 dataString = "OYTIGZF"
+            )
+        )
+    }
+
+    fun stopServer() {
+        sendNetworkEvent(
+            NetworkEvent(
+                netEventType = NetEventType.SERVER_CLOSED,
+                connectionId = ConnectionId()
             )
         )
     }
