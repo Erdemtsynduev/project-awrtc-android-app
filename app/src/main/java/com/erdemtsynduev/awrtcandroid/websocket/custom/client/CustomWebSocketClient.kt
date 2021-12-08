@@ -1,6 +1,7 @@
-package com.erdemtsynduev.awrtcandroid.websocket.custom
+package com.erdemtsynduev.awrtcandroid.websocket.custom.client
 
-import com.erdemtsynduev.awrtcandroid.websocket.ssl.CustomX509TrustManager
+import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketClientCallback
+import com.erdemtsynduev.awrtcandroid.websocket.custom.ssl.CustomX509TrustManager
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
@@ -13,11 +14,11 @@ import javax.net.ssl.TrustManager
 /**
  * Кастомный веб сокет с возможностью реконнекта
  * @param serverUri адрес для подключения к сокету
- * @param webSocketClientEvent ивенты событий вебсокета
+ * @param webSocketClientCallback ивенты событий вебсокета
  */
 class CustomWebSocketClient(
     serverUri: URI?,
-    private val webSocketClientEvent: WebSocketClientEvent
+    private val webSocketClientCallback: WebSocketClientCallback
 ) : WebSocketClient(serverUri), BaseWebSocketClient {
 
     private var connectFlag = false
@@ -29,28 +30,28 @@ class CustomWebSocketClient(
             } catch (exception: InterruptedException) {
                 exception.printStackTrace()
             }
-            webSocketClientEvent.onReconnect()
+            webSocketClientCallback.onReconnect()
         } else {
-            webSocketClientEvent.onClose()
+            webSocketClientCallback.onClose()
         }
     }
 
     override fun onError(exception: Exception) {
         connectFlag = false
-        webSocketClientEvent.onError(exception)
+        webSocketClientCallback.onError(exception)
     }
 
     override fun onOpen(serverHandshake: ServerHandshake) {
         connectFlag = true
-        webSocketClientEvent.onOpen()
+        webSocketClientCallback.onOpen()
     }
 
     override fun onMessage(bytes: ByteBuffer) {
-        webSocketClientEvent.onMessage(bytes)
+        webSocketClientCallback.onMessage(bytes)
     }
 
     override fun onMessage(message: String) {
-        webSocketClientEvent.onMessage(message)
+        webSocketClientCallback.onMessage(message)
     }
 
     override fun setConnectFlag(connectFlag: Boolean) {

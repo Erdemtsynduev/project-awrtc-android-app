@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 /**
  * Общий интерфейс для WebSocketClientCustom
  */
-interface WebSocketClientEvent {
+interface WebSocketClientCallback {
 
     /**
      * Событие - Веб сокет открыт

@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.websocket.custom
+package com.erdemtsynduev.awrtcandroid.websocket.custom.client
 
 interface BaseWebSocketClient {
 

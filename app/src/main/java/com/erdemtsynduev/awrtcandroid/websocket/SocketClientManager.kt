@@ -7,13 +7,13 @@ import com.erdemtsynduev.awrtcandroid.model.netevent.NetEvent
 import com.erdemtsynduev.awrtcandroid.utils.ConstData
 import com.erdemtsynduev.awrtcandroid.utils.toByteArray
 import com.erdemtsynduev.awrtcandroid.utils.toNetworkEvent
-import com.erdemtsynduev.awrtcandroid.websocket.custom.CustomWebSocketClient
-import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketClientEvent
+import com.erdemtsynduev.awrtcandroid.websocket.custom.client.CustomWebSocketClient
+import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketClientCallback
 import java.lang.Exception
 import java.net.URI
 import java.nio.ByteBuffer
 
-class SocketClientManager() : WebSocketClientEvent {
+class SocketClientManager() : WebSocketClientCallback {
 
     private var customWebSocketClient: CustomWebSocketClient? = null
 
