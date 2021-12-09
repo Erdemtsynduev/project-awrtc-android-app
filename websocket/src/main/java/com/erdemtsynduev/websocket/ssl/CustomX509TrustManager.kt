@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.websocket.custom.ssl
+package com.erdemtsynduev.websocket.ssl
 
 import android.annotation.SuppressLint
 import java.security.cert.CertificateException

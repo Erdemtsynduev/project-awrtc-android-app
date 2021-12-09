@@ -1,9 +1,9 @@
-package com.erdemtsynduev.awrtcandroid.websocket.custom.client
+package com.erdemtsynduev.websocket.client
 
 interface BaseWebSocketClient {
 
     /**
-     * Отправить данные в веб сокет
+     * Отправить данные в веб сокет в виде байтового массива
      */
     fun sendByteArray(data: ByteArray?)
 

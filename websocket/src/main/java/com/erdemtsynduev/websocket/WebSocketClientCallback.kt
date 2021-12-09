@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.websocket.custom
+package com.erdemtsynduev.websocket
 
 import java.lang.Exception
 import java.nio.ByteBuffer
@@ -14,14 +14,14 @@ interface WebSocketClientCallback {
     fun onOpen()
 
     /**
-     * Событие - Веб сокет закрыт
-     */
-    fun onClose()
-
-    /**
      * Событие - Веб сокет переподключение
      */
     fun onReconnect()
+
+    /**
+     * Событие - Веб сокет закрыт
+     */
+    fun onClose()
 
     /**
      * Событие - Пришли данные из веб сокета в виде байтового массива

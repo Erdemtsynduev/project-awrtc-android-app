@@ -1,7 +1,7 @@
-package com.erdemtsynduev.awrtcandroid.websocket.custom.client
+package com.erdemtsynduev.websocket.client
 
-import com.erdemtsynduev.awrtcandroid.websocket.custom.WebSocketClientCallback
-import com.erdemtsynduev.awrtcandroid.websocket.custom.ssl.CustomX509TrustManager
+import com.erdemtsynduev.websocket.WebSocketClientCallback
+import com.erdemtsynduev.websocket.ssl.CustomX509TrustManager
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
@@ -60,11 +60,11 @@ class CustomWebSocketClient(
 
     override fun sendByteArray(data: ByteArray?) {
         data?.let {
-            internalSend(data)
+            internalSendByteArray(it)
         }
     }
 
-    private fun internalSend(data: ByteArray?) {
+    private fun internalSendByteArray(data: ByteArray?) {
         if (connectFlag) {
             send(data)
         }
@@ -73,7 +73,8 @@ class CustomWebSocketClient(
     override fun enableUnsafeSslConnection(): Boolean {
         return try {
             val sslContext: SSLContext = SSLContext.getInstance("TLS")
-            sslContext.init(null,
+            sslContext.init(
+                null,
                 arrayOf<TrustManager>(CustomX509TrustManager()),
                 SecureRandom()
             )
@@ -83,5 +84,12 @@ class CustomWebSocketClient(
             exception.printStackTrace()
             false
         }
+    }
+
+    companion object {
+        fun instance(
+            serverUri: URI?,
+            webSocketClientCallback: WebSocketClientCallback
+        ) = CustomWebSocketClient(serverUri, webSocketClientCallback)
     }
 }
