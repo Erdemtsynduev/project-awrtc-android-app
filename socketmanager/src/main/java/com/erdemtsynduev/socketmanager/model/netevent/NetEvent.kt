@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.model.netevent
+package com.erdemtsynduev.socketmanager.model.netevent
 
 class NetEvent(
     var netEventType: NetEventType? = null,

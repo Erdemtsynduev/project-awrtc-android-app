@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.model
+package com.erdemtsynduev.socketmanager.model
 
 enum class WebSocketServerStatus {
     OFFLINE,

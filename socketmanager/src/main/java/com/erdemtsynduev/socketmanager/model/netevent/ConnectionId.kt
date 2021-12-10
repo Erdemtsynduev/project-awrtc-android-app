@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.model.netevent
+package com.erdemtsynduev.socketmanager.model.netevent
 
 data class ConnectionId(var id: Short = INVALID) {
     companion object {

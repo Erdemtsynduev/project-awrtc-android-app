@@ -1,7 +1,7 @@
-package com.erdemtsynduev.awrtcandroid.network
+package com.erdemtsynduev.socketmanager.network
 
-import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEvent
+import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
+import com.erdemtsynduev.socketmanager.model.netevent.NetEvent
 
 /**
  * Интерфейс к сети, которая не требует сохранения каких-либо состояний.

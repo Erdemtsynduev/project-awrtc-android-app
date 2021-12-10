@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.utils
+package com.erdemtsynduev.socketmanager.utils
 
 object ByteUtils {
 

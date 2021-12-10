@@ -1,9 +1,9 @@
-package com.erdemtsynduev.awrtcandroid.utils
+package com.erdemtsynduev.socketmanager.utils
 
-import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventDataType
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventType
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEvent
+import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
+import com.erdemtsynduev.socketmanager.model.netevent.NetEventDataType
+import com.erdemtsynduev.socketmanager.model.netevent.NetEventType
+import com.erdemtsynduev.socketmanager.model.netevent.NetEvent
 
 /**
  * Конвертируем массив байтов в NetworkEvent

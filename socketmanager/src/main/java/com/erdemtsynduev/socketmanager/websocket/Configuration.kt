@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.websocket
+package com.erdemtsynduev.socketmanager.websocket
 
 class Configuration {
 

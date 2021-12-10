@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.model.candidate
+package com.erdemtsynduev.socketmanager.model.candidate
 
 import com.google.gson.annotations.SerializedName
 

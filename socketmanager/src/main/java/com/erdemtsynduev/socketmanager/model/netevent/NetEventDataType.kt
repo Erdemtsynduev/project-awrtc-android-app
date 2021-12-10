@@ -1,4 +1,4 @@
-package com.erdemtsynduev.awrtcandroid.model.netevent
+package com.erdemtsynduev.socketmanager.model.netevent
 
 enum class NetEventDataType(val value: Byte) {
     NULL(0),

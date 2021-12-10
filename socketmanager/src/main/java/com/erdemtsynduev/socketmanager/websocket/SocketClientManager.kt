@@ -1,13 +1,13 @@
-package com.erdemtsynduev.awrtcandroid.websocket
+package com.erdemtsynduev.socketmanager.websocket
 
-import android.util.Log
-import com.erdemtsynduev.awrtcandroid.model.WebSocketConnectionStatus
-import com.erdemtsynduev.awrtcandroid.model.WebSocketServerStatus
-import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEventType
-import com.erdemtsynduev.awrtcandroid.model.netevent.NetEvent
-import com.erdemtsynduev.awrtcandroid.utils.toByteArray
-import com.erdemtsynduev.awrtcandroid.utils.toNetworkEvent
+import com.erdemtsynduev.socketmanager.model.WebSocketConnectionStatus
+import com.erdemtsynduev.socketmanager.model.WebSocketServerStatus
+import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
+import com.erdemtsynduev.socketmanager.model.netevent.NetEventType
+import com.erdemtsynduev.socketmanager.model.netevent.NetEvent
+import com.erdemtsynduev.socketmanager.utils.AppUtils
+import com.erdemtsynduev.socketmanager.utils.toByteArray
+import com.erdemtsynduev.socketmanager.utils.toNetworkEvent
 import com.erdemtsynduev.websocket.WebSocketClientCallback
 import com.erdemtsynduev.websocket.client.CustomWebSocketClient
 import java.lang.Exception
@@ -15,12 +15,11 @@ import java.net.URI
 import java.nio.ByteBuffer
 import java.util.*
 import kotlin.collections.ArrayDeque
-import kotlin.math.roundToInt
 
 class SocketClientManager(
     var urlWebSocket: String? = null,
     var config: Configuration? = null
-) : WebSocketClientCallback {
+) : IBasicNetwork, WebSocketClientCallback {
 
     // web socket client
     private var webSocketClient: CustomWebSocketClient? = null
@@ -49,15 +48,7 @@ class SocketClientManager(
     /**
      * Версия протокола, реализованная здесь
      */
-    private val PROTOCOL_VERSION: Int = 2
-
-    /**
-     * Минимальная версия протокола, которая все еще поддерживается.
-     * Серверы V 1 не распознают сердцебиение и версию
-     * сообщения, но просто регистрирует неизвестное сообщение и
-     * продолжайте нормально.
-     */
-    private val PROTOCOL_VERSION_MIN: Int = 1
+    private val protocolVersion: Int = PROTOCOL_VERSION_DEFAULT
 
     // Предполагайте 1, пока сообщение не получено
     private var remoteProtocolVersion: Int = 1
@@ -196,7 +187,7 @@ class SocketClientManager(
     }
 
     override fun onMessage(message: String) {
-        Log.i(TAG, "onMessage string")
+        // Ивент - получаем данные в виде строки
     }
 
     override fun onError(exception: Exception) {
@@ -299,40 +290,45 @@ class SocketClientManager(
         if (byteArray == null || byteArray.isEmpty()) {
             return
         } else if (byteArray[0] == NetEventType.META_VERSION.value) {
-            Log.i(TAG, "byteArray NetEventType.META_VERSION")
             if (byteArray.size > 1) {
-                this.remoteProtocolVersion = byteArray[1].toInt()
-                Log.i(TAG, "remoteProtocolVersion = $remoteProtocolVersion")
-            } else {
-                Log.i(TAG, "Received an invalid MetaVersion header without content.")
+                // Обновляем версию протокола
+                remoteProtocolVersion = byteArray[1].toInt()
             }
         } else if (byteArray[0] == NetEventType.META_HEART_BEAT.value) {
-            this.heartbeatReceived = true
-            Log.i(TAG, "heartBeatReceived = $heartbeatReceived")
+            // Обновляем данные heartbeatReceived
+            heartbeatReceived = true
         } else {
             val event = byteArray.toNetworkEvent()
-            Log.i(TAG, "event = $event")
+            handleIncomingEvent(event)
         }
     }
 
     private fun handleIncomingEvent(evt: NetEvent) {
-        if (evt.netEventType == NetEventType.NEW_CONNECTION) {
-            //removing connecting info
-            tryRemoveConnecting(evt.connectionId)
-            //add connection
-            connections.addLast(evt.connectionId.id)
-        } else if (evt.netEventType == NetEventType.CONNECTION_FAILED) {
-            //remove connecting info
-            tryRemoveConnecting(evt.connectionId)
-        } else if (evt.netEventType == NetEventType.DISCONNECTED) {
-            //remove from connections
-            tryRemoveConnection(evt.connectionId)
-        } else if (evt.netEventType == NetEventType.SERVER_INITIALIZED) {
-            serverStatus = WebSocketServerStatus.ONLINE
-        } else if (evt.netEventType == NetEventType.SERVER_INIT_FAILED) {
-            serverStatus = WebSocketServerStatus.OFFLINE
-        } else if (evt.netEventType == NetEventType.SERVER_CLOSED) {
-            serverStatus = WebSocketServerStatus.OFFLINE
+        when (evt.netEventType) {
+            NetEventType.NEW_CONNECTION -> {
+                //removing connecting info
+                tryRemoveConnecting(evt.connectionId)
+                //add connection
+                connections.addLast(evt.connectionId.id)
+            }
+            NetEventType.CONNECTION_FAILED -> {
+                //remove connecting info
+                tryRemoveConnecting(evt.connectionId)
+            }
+            NetEventType.DISCONNECTED -> {
+                //remove from connections
+                tryRemoveConnection(evt.connectionId)
+            }
+            NetEventType.SERVER_INITIALIZED -> {
+                serverStatus = WebSocketServerStatus.ONLINE
+            }
+            NetEventType.SERVER_INIT_FAILED -> {
+                serverStatus = WebSocketServerStatus.OFFLINE
+            }
+            NetEventType.SERVER_CLOSED -> {
+                serverStatus = WebSocketServerStatus.OFFLINE
+            }
+            else -> {}
         }
 
         enqueueIncoming(evt)
@@ -359,7 +355,7 @@ class SocketClientManager(
         if (webSocketClient != null) {
             val byteArray = ByteArray(2)
             byteArray[0] = NetEventType.META_VERSION.value
-            byteArray[1] = PROTOCOL_VERSION.toByte()
+            byteArray[1] = protocolVersion.toByte()
             webSocketClient?.sendByteArray(byteArray)
         }
     }
@@ -380,19 +376,9 @@ class SocketClientManager(
         return result
     }
 
-    private fun getRandomKey(): String {
-        var result = ""
-        for (i in 0 until 7) {
-            val data = 65 + (Math.random() * 25).roundToInt()
-            Char(data).toString()
-            result += Char(data).toString()
-        }
-        return result
-    }
-
     // interface implementation
 
-    fun dequeue(): NetEvent? {
+    override fun dequeue(): NetEvent? {
         return if (incomingQueue.size > 0) {
             incomingQueue.removeFirstOrNull()
         } else {
@@ -400,7 +386,7 @@ class SocketClientManager(
         }
     }
 
-    fun peek(): NetEvent? {
+    override fun peek(): NetEvent? {
         return if (incomingQueue.size > 0) {
             incomingQueue.firstOrNull()
         } else {
@@ -408,12 +394,12 @@ class SocketClientManager(
         }
     }
 
-    fun update() {
-        updateHeartbeat();
+    override fun update() {
+        updateHeartbeat()
         checkSleep()
     }
 
-    fun flush() {
+    override fun flush() {
         //ideally we buffer everything and then flush when it is connected as
         //websockets aren't suppose to be used for realtime communication anyway
         if (connectionStatus == WebSocketConnectionStatus.CONNECTED) {
@@ -421,7 +407,7 @@ class SocketClientManager(
         }
     }
 
-    fun sendData(id: ConnectionId?, data: ByteArray?, reliable: Boolean): Boolean {
+    override fun sendData(id: ConnectionId?, data: ByteArray?, reliable: Boolean?): Boolean {
         if (id == null || id.id == ConnectionId.INVALID) {
             // Ignored message. Invalid connection id.
             return false
@@ -430,45 +416,45 @@ class SocketClientManager(
             return false
         }
 
-        val evt: NetEvent = if (reliable) {
+        val evt: NetEvent = if (reliable == true) {
             NetEvent(
                 netEventType = NetEventType.RELIABLE_MESSAGE_RECEIVED,
                 connectionId = id,
                 dataByteArray = data
-            );
+            )
         } else {
             NetEvent(
                 netEventType = NetEventType.UNRELIABLE_MESSAGE_RECEIVED,
                 connectionId = id,
                 dataByteArray = data
-            );
+            )
         }
 
         enqueueOutgoing(evt)
         return true
     }
 
-    fun disconnect(id: ConnectionId) {
+    override fun disconnect(id: ConnectionId) {
         val evt = NetEvent(NetEventType.DISCONNECTED, id)
         enqueueOutgoing(evt)
     }
 
-    fun shutdown() {
+    override fun shutdown() {
         cleanUp()
         connectionStatus = WebSocketConnectionStatus.NOT_CONNECTED
     }
 
-    fun dispose() {
+    override fun dispose() {
         if (!isDisposed) {
             shutdown()
             isDisposed = true
         }
     }
 
-    fun startServer(address: String?) {
+    override fun startServer(address: String?) {
         var addressData = address
         if (addressData == null) {
-            addressData = "" + getRandomKey()
+            addressData = AppUtils.getRandomKey()
         }
 
         if (serverStatus == WebSocketServerStatus.OFFLINE) {
@@ -492,7 +478,7 @@ class SocketClientManager(
         }
     }
 
-    fun stopServer() {
+    override fun stopServer() {
         enqueueOutgoing(
             NetEvent(
                 netEventType = NetEventType.SERVER_CLOSED,
@@ -501,7 +487,7 @@ class SocketClientManager(
         )
     }
 
-    fun connect(address: String?): ConnectionId {
+    override fun connect(address: String?): ConnectionId {
         ensureServerConnection()
         val newConId = nextConnectionId()
         connecting.addLast(newConId.id)
@@ -515,6 +501,11 @@ class SocketClientManager(
     }
 
     companion object {
-        private const val TAG = "dds_SocketManager"
+        const val PROTOCOL_VERSION_DEFAULT: Int = 2
+
+        fun instance(
+            urlWebSocket: String?,
+            config: Configuration?
+        ) = SocketClientManager(urlWebSocket, config)
     }
 }

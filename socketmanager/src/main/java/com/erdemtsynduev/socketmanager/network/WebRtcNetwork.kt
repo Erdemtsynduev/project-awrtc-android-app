@@ -1,6 +1,6 @@
-package com.erdemtsynduev.awrtcandroid.network
+package com.erdemtsynduev.socketmanager.network
 
-import com.erdemtsynduev.awrtcandroid.model.netevent.ConnectionId
+import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
 
 /**
  * Общий интерфейс для WebRtcNetwork и UnityNetwork.
