@@ -2,7 +2,7 @@ package com.erdemtsynduev.awrtcandroid
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.erdemtsynduev.socketmanager.websocket.SocketClientManager
+import com.erdemtsynduev.socketmanager.SocketClientManager
 
 class MainActivity : AppCompatActivity() {
 

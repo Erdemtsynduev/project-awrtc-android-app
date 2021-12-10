@@ -1,4 +1,4 @@
-package com.erdemtsynduev.socketmanager.websocket
+package com.erdemtsynduev.socketmanager
 
 import com.erdemtsynduev.socketmanager.model.WebSocketConnectionStatus
 import com.erdemtsynduev.socketmanager.model.WebSocketServerStatus
@@ -9,6 +9,7 @@ import com.erdemtsynduev.socketmanager.network.IBasicNetwork
 import com.erdemtsynduev.socketmanager.utils.AppUtils
 import com.erdemtsynduev.socketmanager.utils.toByteArray
 import com.erdemtsynduev.socketmanager.utils.toNetworkEvent
+import com.erdemtsynduev.socketmanager.websocket.Configuration
 import com.erdemtsynduev.websocket.WebSocketClientCallback
 import com.erdemtsynduev.websocket.client.CustomWebSocketClient
 import java.lang.Exception
@@ -346,18 +347,13 @@ class SocketClientManager(
 
     private fun sendHeartbeat() {
         if (webSocketClient != null) {
-            val byteArray = ByteArray(1)
-            byteArray[0] = NetEventType.META_HEART_BEAT.value
-            webSocketClient?.sendByteArray(byteArray)
+            webSocketClient?.sendByteArray(AppUtils.getHeartbeat())
         }
     }
 
     private fun sendVersion() {
         if (webSocketClient != null) {
-            val byteArray = ByteArray(2)
-            byteArray[0] = NetEventType.META_VERSION.value
-            byteArray[1] = protocolVersion.toByte()
-            webSocketClient?.sendByteArray(byteArray)
+            webSocketClient?.sendByteArray(AppUtils.getVersion(protocolVersion))
         }
     }
 
