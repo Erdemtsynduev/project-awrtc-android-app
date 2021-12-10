@@ -19,7 +19,7 @@ import java.util.*
 import kotlin.collections.ArrayDeque
 
 class SocketClientManager(
-    var urlWebSocket: String? = null,
+    var urlWebSocket: String,
     var config: Configuration? = null
 ) : IBasicNetwork, WebSocketClientCallback {
 
@@ -71,9 +71,7 @@ class SocketClientManager(
 
     private fun webSocketConnect() {
         connectionStatus = WebSocketConnectionStatus.CONNECTING
-        urlWebSocket?.let {
-            connectSocket(it)
-        }
+        connectSocket(urlWebSocket)
     }
 
     // Подключение к веб сокету
@@ -338,7 +336,7 @@ class SocketClientManager(
 
     private fun handleOutgoingEvents() {
         while (outgoingQueue.size > 0) {
-            val evt = this.outgoingQueue.firstOrNull()
+            val evt = this.outgoingQueue.removeFirstOrNull()
             evt?.let {
                 sendNetworkEvent(it)
             }
@@ -501,8 +499,8 @@ class SocketClientManager(
         const val PROTOCOL_VERSION_DEFAULT: Int = 2
 
         fun instance(
-            urlWebSocket: String?,
-            config: Configuration?
+            urlWebSocket: String,
+            config: Configuration? = null
         ) = SocketClientManager(urlWebSocket, config)
     }
 }
