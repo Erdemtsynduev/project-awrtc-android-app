@@ -5,6 +5,7 @@ import com.erdemtsynduev.socketmanager.model.WebSocketServerStatus
 import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
 import com.erdemtsynduev.socketmanager.model.netevent.NetEventType
 import com.erdemtsynduev.socketmanager.model.netevent.NetEvent
+import com.erdemtsynduev.socketmanager.network.IBasicNetwork
 import com.erdemtsynduev.socketmanager.utils.AppUtils
 import com.erdemtsynduev.socketmanager.utils.toByteArray
 import com.erdemtsynduev.socketmanager.utils.toNetworkEvent

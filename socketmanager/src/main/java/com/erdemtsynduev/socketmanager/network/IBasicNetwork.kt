@@ -1,4 +1,4 @@
-package com.erdemtsynduev.socketmanager.websocket
+package com.erdemtsynduev.socketmanager.network
 
 import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
 
