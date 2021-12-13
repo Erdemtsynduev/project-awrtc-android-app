@@ -20,6 +20,7 @@ import com.erdemtsynduev.socketmanager.SocketClientManager
 import com.erdemtsynduev.socketmanager.model.netevent.ConnectionId
 import com.erdemtsynduev.socketmanager.model.netevent.NetEvent
 import com.erdemtsynduev.socketmanager.model.netevent.NetEventType
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 import org.webrtc.IceCandidate
@@ -28,6 +29,8 @@ import org.webrtc.SessionDescription
 import com.google.gson.JsonParser
 
 import com.google.gson.JsonObject
+import org.json.JSONObject
+import java.util.HashMap
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var rtcClient: RTCClient
 
-    private val socketManager = SocketClientManager.instance("ws://10.0.2.2:12776")
+    private val socketManager = SocketClientManager.instance("ws://192.168.1.191:12776")
 
     private var connectionId: ConnectionId? = null
     private var netEvent: NetEvent? = null
@@ -46,14 +49,16 @@ class MainActivity : AppCompatActivity() {
     private val sdpObserver = object : AppSdpObserver() {
         override fun onCreateSuccess(p0: SessionDescription?) {
             super.onCreateSuccess(p0)
-//            val data = OfferModel(type = "answer", sdp = p0?.description)
-//            val gson = GsonBuilder().setPrettyPrinting().create()
-//            val dataString = gson.toJson(data)
-//            socketManager.sendData(
-//                id = connectionId,
-//                data = dataString.toByteArray(Charsets.UTF_16LE),
-//                reliable = true
-//            )
+            val mapData: MutableMap<String, String?> = HashMap<String, String?>()
+            mapData["type"] = p0?.type?.canonicalForm()
+            mapData["sdp"] = p0?.description
+            val objectData = JSONObject(mapData as Map<*, *>?)
+            val jsonString: String = objectData.toString()
+            socketManager.sendData(
+                id = connectionId,
+                data = jsonString.toByteArray(Charsets.UTF_16LE),
+                reliable = true
+            )
         }
     }
 
@@ -68,36 +73,50 @@ class MainActivity : AppCompatActivity() {
         if (netEvent != null) {
             Log.d("MainActivity", netEvent.toString())
             if (netEvent.netEventType == NetEventType.RELIABLE_MESSAGE_RECEIVED) {
-                netEvent.dataByteArray?.let {
-                    val dataString = String(it, Charsets.UTF_16LE)
-                    Log.d("MainActivity", dataString)
-                    val dataInt = dataString.toIntOrNull()
-                    if (dataInt != null && dataInt > 0) {
-                        val newDataInt = dataInt - 1
-                        socketManager.sendData(
-                            id = connectionId,
-                            data = newDataInt.toString().toByteArray(Charsets.UTF_16LE),
-                            reliable = true
-                        )
-                    } else {
-                        val jsonObject = JsonParser().parse(dataString) as JsonObject
-                        val isHasType = jsonObject.has("type")
-                        val gson = GsonBuilder().setPrettyPrinting().create()
-
-                        if (isHasType) {
-                            val data = gson.fromJson(dataString, OfferModel::class.java)
-                            val sessionDescription = SessionDescription(SessionDescription.Type.OFFER,
-                                data.sdp
+                if (netEvent.connectionId == connectionId) {
+                    netEvent.dataByteArray?.let {
+                        val dataString = String(it, Charsets.UTF_16LE)
+                        Log.d("MainActivity", dataString)
+                        val dataInt = dataString.toIntOrNull()
+                        if (dataInt != null && dataInt > 0) {
+                            val newDataInt = dataInt - 1
+                            socketManager.sendData(
+                                id = connectionId,
+                                data = newDataInt.toString().toByteArray(Charsets.UTF_16LE),
+                                reliable = true
                             )
-                            signallingClientListener.onAnswerReceived(sessionDescription)
                         } else {
-                            val data = gson.fromJson(dataString, CandidateModel::class.java)
-                            val iceCandidate = data?.sdpMLineIndex?.let { it1 ->
-                                IceCandidate(data.sdpMid,
-                                    it1, data.candidate)
-                            }
-                            iceCandidate?.let {
-                                signallingClientListener.onIceCandidateReceived(it)
+                            val jsonObject = JsonParser().parse(dataString) as JsonObject
+                            val isHasType = jsonObject.has("type")
+                            val gson = GsonBuilder().setPrettyPrinting().create()
+
+                            if (isHasType) {
+                                val typeString = jsonObject.get("type").asString
+                                val sdpString = jsonObject.get("sdp").asString
+                                if (typeString == SessionDescription.Type.OFFER.canonicalForm()) {
+                                    val sessionDescription = SessionDescription(
+                                        SessionDescription.Type.OFFER,
+                                        sdpString
+                                    )
+                                    signallingClientListener.onOfferReceived(sessionDescription)
+                                } else {
+                                    val sessionDescription = SessionDescription(
+                                        SessionDescription.Type.ANSWER,
+                                        sdpString
+                                    )
+                                    signallingClientListener.onAnswerReceived(sessionDescription)
+                                }
+                            } else {
+                                val data = gson.fromJson(dataString, CandidateModel::class.java)
+                                val iceCandidate = data?.sdpMLineIndex?.let { it1 ->
+                                    IceCandidate(
+                                        data.sdpMid,
+                                        it1, data.candidate
+                                    )
+                                }
+                                iceCandidate?.let {
+                                    signallingClientListener.onIceCandidateReceived(it)
+                                }
                             }
                         }
                     }
@@ -180,7 +199,18 @@ class MainActivity : AppCompatActivity() {
             object : PeerConnectionObserver() {
                 override fun onIceCandidate(p0: IceCandidate?) {
                     super.onIceCandidate(p0)
-//                    socketManager.sendData(id = connectionId, data =, reliable = true)
+                    val data = CandidateModel(
+                        sdpMLineIndex = p0?.sdpMLineIndex,
+                        candidate = p0?.sdp,
+                        sdpMid = p0?.sdpMid,
+                    )
+                    val gson = GsonBuilder().create()
+                    val dataString = gson.toJson(data)
+                    socketManager.sendData(
+                        id = connectionId,
+                        data = dataString.toByteArray(Charsets.UTF_16LE),
+                        reliable = true
+                    )
                     rtcClient.addIceCandidate(p0)
                 }
 
@@ -191,8 +221,6 @@ class MainActivity : AppCompatActivity() {
             }
         )
         rtcClient.initSurfaceView(remote_view)
-        rtcClient.initSurfaceView(local_view)
-        rtcClient.startLocalVideoCapture(local_view)
         call_button.setOnClickListener { rtcClient.call(sdpObserver) }
     }
 

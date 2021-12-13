@@ -25,6 +25,7 @@ class Peer(
 
     fun createPeerConnection(): PeerConnection? {
         val rtcConfig = RTCConfiguration(iceServerList)
+        rtcConfig.sdpSemantics = SdpSemantics.PLAN_B
         return peerConnectionFactory?.createPeerConnection(rtcConfig, this)
     }
 

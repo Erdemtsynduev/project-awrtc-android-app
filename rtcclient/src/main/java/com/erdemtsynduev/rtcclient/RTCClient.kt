@@ -44,8 +44,7 @@ class RTCClient(
 
     private fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
-            .setEnableInternalTracer(true)
-            .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+            .setEnableInternalTracer(false)
             .createInitializationOptions()
         PeerConnectionFactory.initialize(options)
     }
@@ -62,7 +61,8 @@ class RTCClient(
                 )
             )
             .setOptions(PeerConnectionFactory.Options().apply {
-                disableEncryption = true
+                // Если не отключить то не будет работать с сервером why not
+                disableEncryption = false
                 disableNetworkMonitor = true
             })
             .createPeerConnectionFactory()
@@ -108,7 +108,10 @@ class RTCClient(
 
     private fun PeerConnection.call(sdpObserver: SdpObserver) {
         val constraints = MediaConstraints().apply {
-            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("offerToReceiveAudio", "false"))
+            mandatory.add(MediaConstraints.KeyValuePair("offerToReceiveVideo", "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("RtpDataChannels", "true"))
         }
 
         createOffer(object : SdpObserver by sdpObserver {
@@ -147,6 +150,7 @@ class RTCClient(
                     }
 
                     override fun onCreateSuccess(p0: SessionDescription?) {
+
                     }
 
                     override fun onCreateFailure(p0: String?) {
