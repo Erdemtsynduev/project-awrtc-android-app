@@ -19,7 +19,7 @@ import java.util.*
 import kotlin.collections.ArrayDeque
 
 class SocketClientManager(
-    var urlWebSocket: String,
+    var urlWebSocket: String?,
     var config: Configuration? = null
 ) : IBasicNetwork, WebSocketClientCallback {
 
@@ -74,9 +74,14 @@ class SocketClientManager(
         connectSocket(urlWebSocket)
     }
 
+    private fun webSocketConnect(urlWebSocket: String?) {
+        connectionStatus = WebSocketConnectionStatus.CONNECTING
+        connectSocket(urlWebSocket)
+    }
+
     // Подключение к веб сокету
-    private fun connectSocket(url: String) {
-        if (webSocketClient == null || !webSocketClient?.isOpen!!) {
+    private fun connectSocket(url: String?) {
+        if ((webSocketClient == null || !webSocketClient?.isOpen!!) && url != null) {
             val uri = URI(url)
             webSocketClient = CustomWebSocketClient.instance(
                 serverUri = uri,
@@ -499,7 +504,7 @@ class SocketClientManager(
         const val PROTOCOL_VERSION_DEFAULT: Int = 2
 
         fun instance(
-            urlWebSocket: String,
+            urlWebSocket: String? = null,
             config: Configuration? = null
         ) = SocketClientManager(urlWebSocket, config)
     }

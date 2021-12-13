@@ -25,12 +25,30 @@ fun ByteArray.toNetworkEvent(): NetEvent {
     var dataByteArray: ByteArray? = null
     when (dataType) {
         NetEventDataType.BYTE_ARRAY -> {
-            val newByteArray = this.drop(7)
-            dataByteArray = newByteArray.toByteArray()
+            val length: Int = ByteUtils.read4BytesFromBuffer(this, 4)
+            val newByteArray = this.drop(8)
+            val byteArrayTemp = ByteArray(length)
+            newByteArray.forEachIndexed { index, byte ->
+                if (index > length) {
+                    return@forEachIndexed
+                } else {
+                    byteArrayTemp[index] = byte
+                }
+            }
+            dataByteArray = byteArrayTemp
         }
         NetEventDataType.UTF16_STRING -> {
-            val newByteArray = this.drop(7)
-            dataString = String(newByteArray.toByteArray(), Charsets.UTF_16)
+            val length: Int = ByteUtils.read4BytesFromBuffer(this, 4)
+            val newByteArray = this.drop(8)
+            val byteArrayTemp = ByteArray(length)
+            newByteArray.forEachIndexed { index, byte ->
+                if (index > length) {
+                    return@forEachIndexed
+                } else {
+                    byteArrayTemp[index] = byte
+                }
+            }
+            dataString = String(byteArrayTemp, Charsets.UTF_16LE)
         }
         NetEventDataType.NULL -> {
             // Данных нет
